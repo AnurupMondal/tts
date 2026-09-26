@@ -1,0 +1,24 @@
+services:
+  bot:
+    build: .
+    image: hinglish-tts-bot
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Overrides the local path from .env with the mounted secret below.
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/google-credentials.json
+      DATA_DIR: /app/data
+    secrets:
+      - source: google_credentials
+        target: google-credentials.json
+    volumes:
+      - bot-data:/app/data
+
+# Google service-account key, mounted read-only at /run/secrets. Never baked into the image.
+# Using only Sarvam? Remove the `secrets:` blocks (here and above) and the GOOGLE_APPLICATION_CREDENTIALS line.
+secrets:
+  google_credentials:
+    file: ./credentials/google-credentials.json
+
+volumes:
+  bot-data:

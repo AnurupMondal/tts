@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+data/
+*.ogg
+*.mp3
+*.wav
+credentials/
+*.log
+.scratch/
+.env.*
+!.env.example

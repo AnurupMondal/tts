@@ -1,0 +1,183 @@
+/**
+ * Correction layer on top of the transliteration engine.
+ *
+ * Google Input Tools handles open vocabulary well but consistently misses nasalisation and
+ * picks the wrong homograph for some very frequent function words
+ * (e.g. "mai" → मई, "hu" → हु, "nahi" → नही, "acha" → ाचा). These are pinned here.
+ * Keys are the *canonical* romanisations produced by the normalizer.
+ * Keep this list small: open-vocabulary words belong to the engine.
+ */
+export const DEVANAGARI_OVERRIDES: Readonly<Record<string, string>> = {
+  // pronouns
+  main: 'मैं',
+  mein: 'में',
+  tu: 'तू',
+  tum: 'तुम',
+  aap: 'आप',
+  hum: 'हम',
+  mujhe: 'मुझे',
+  tujhe: 'तुझे',
+  humein: 'हमें',
+  maine: 'मैंने',
+  tune: 'तूने',
+  usne: 'उसने',
+  humne: 'हमने',
+  aapne: 'आपने',
+  tumne: 'तुमने',
+  tumhe: 'तुम्हें',
+  unhe: 'उन्हें',
+  use: 'उसे',
+  ise: 'इसे',
+  woh: 'वो',
+  yeh: 'ये',
+  // copula / auxiliaries
+  hai: 'है',
+  hain: 'हैं',
+  hoon: 'हूँ',
+  ho: 'हो',
+  tha: 'था',
+  thi: 'थी',
+  the: 'थे',
+  // negation / affirmation
+  nahi: 'नहीं',
+  na: 'ना',
+  mat: 'मत',
+  haan: 'हाँ',
+  // question words
+  kya: 'क्या',
+  kyun: 'क्यों',
+  kahaan: 'कहाँ',
+  kaha: 'कहा',
+  kab: 'कब',
+  kaun: 'कौन',
+  kaise: 'कैसे',
+  kaisa: 'कैसा',
+  kaisi: 'कैसी',
+  kidhar: 'किधर',
+  kitna: 'कितना',
+  // places
+  yahaan: 'यहाँ',
+  wahaan: 'वहाँ',
+  idhar: 'इधर',
+  udhar: 'उधर',
+  // postpositions / particles
+  ka: 'का',
+  ki: 'की',
+  ke: 'के',
+  ko: 'को',
+  se: 'से',
+  ne: 'ने',
+  pe: 'पे',
+  par: 'पर',
+  tak: 'तक',
+  bhi: 'भी',
+  hi: 'ही',
+  toh: 'तो',
+  aur: 'और',
+  ya: 'या',
+  // very frequent words the engine gets wrong
+  'ki-conj': 'कि',
+  do: 'दो',
+  wah: 'वाह',
+  bol: 'बोल',
+  bola: 'बोला',
+  boli: 'बोली',
+  bole: 'बोले',
+  accha: 'अच्छा',
+  acchi: 'अच्छी',
+  acche: 'अच्छे',
+  theek: 'ठीक',
+  bahut: 'बहुत',
+  yaar: 'यार',
+  bhai: 'भाई',
+  abhi: 'अभी',
+  kuch: 'कुछ',
+  koi: 'कोई',
+  sab: 'सब',
+  matlab: 'मतलब',
+  pagal: 'पागल',
+  abe: 'अबे',
+  arre: 'अरे',
+  chal: 'चल',
+  ruk: 'रुक',
+  baat: 'बात',
+  pata: 'पता',
+  scene: 'सीन',
+  sahi: 'सही',
+  mast: 'मस्त',
+  kar: 'कर',
+  raha: 'रहा',
+  rahi: 'रही',
+  rahe: 'रहे',
+  gaya: 'गया',
+  gayi: 'गई',
+  gaye: 'गए',
+  hua: 'हुआ',
+  hui: 'हुई',
+  hue: 'हुए',
+  zyada: 'ज़्यादा',
+  thoda: 'थोड़ा',
+  thodi: 'थोड़ी',
+  pehle: 'पहले',
+  baad: 'बाद',
+  phir: 'फिर',
+  kyunki: 'क्योंकि',
+  lekin: 'लेकिन',
+  shayad: 'शायद',
+  jaldi: 'जल्दी',
+};
+
+/**
+ * Spelling variants → canonical romanisation (context-free part of normalisation).
+ * Context-sensitive words (mai/main/me/mein, kaha, kr, h, bt, hi...) are handled in normalizer.ts.
+ */
+export const VARIANTS: Readonly<Record<string, string>> = {
+  // negation
+  nhi: 'nahi', nahin: 'nahi', nai: 'nahi', ni: 'nahi', nhn: 'nahi', nhii: 'nahi', nahee: 'nahi',
+  // copula
+  hy: 'hai', hei: 'hai', hae: 'hai', he: 'hai', hn: 'hain',
+  hu: 'hoon', hun: 'hoon', hoo: 'hoon', hoon: 'hoon',
+  // affirmation
+  han: 'haan', haa: 'haan', ha: 'haan', hanji: 'haanji', haanji: 'haanji',
+  // question words
+  kia: 'kya', kyaa: 'kya', kyu: 'kyun', kyon: 'kyun', kyuu: 'kyun', kiu: 'kyun', q: 'kyun',
+  kahan: 'kahaan', kidar: 'kidhar', kon: 'kaun', kese: 'kaise', kesa: 'kaisa', kesi: 'kaisi',
+  kyuki: 'kyunki', kyonki: 'kyunki', kuki: 'kyunki',
+  // places
+  yaha: 'yahaan', yahan: 'yahaan', waha: 'wahaan', wahan: 'wahaan', vaha: 'wahaan', vahan: 'wahaan', idar: 'idhar', udar: 'udhar',
+  // pronouns
+  mene: 'maine', maene: 'maine', mainne: 'maine',
+  mjhe: 'mujhe', muje: 'mujhe', mujhey: 'mujhe', tjhe: 'tujhe', tuje: 'tujhe', tujhey: 'tujhe',
+  ap: 'aap', ham: 'hum', humko: 'humko', hume: 'humein', tumhein: 'tumhe', wo: 'woh', vo: 'woh', voh: 'woh', ye: 'yeh',
+  mra: 'mera', mre: 'mere', mri: 'meri', tra: 'tera', tre: 'tere', tri: 'teri',
+  // particles
+  to: 'toh', bi: 'bhi', or: 'aur', ar: 'aur', aor: 'aur',
+  // verbs (abbreviated)
+  kr: 'kar', kro: 'karo', krna: 'karna', krne: 'karne', krke: 'karke', krta: 'karta', krti: 'karti', krte: 'karte',
+  krega: 'karega', kregi: 'karegi', krenge: 'karenge', krunga: 'karunga', krungi: 'karungi', krdo: 'kardo', krde: 'karde', krle: 'karle', krlo: 'karlo',
+  rha: 'raha', rhi: 'rahi', rhe: 'rahe', reha: 'raha', rahaa: 'raha', rhega: 'rahega', rhegi: 'rahegi', rhenge: 'rahenge',
+  gya: 'gaya', gyi: 'gayi', gye: 'gaye', gai: 'gayi', gae: 'gaye',
+  hoga: 'hoga', hga: 'hoga', hogya: 'ho gaya', hogaya: 'ho gaya', hogyi: 'ho gayi', hogye: 'ho gaye',
+  dkh: 'dekh', dkho: 'dekho', bol: 'bol', bta: 'bata', bto: 'batao', btao: 'batao', btaa: 'bata',
+  // common words
+  waah: 'wah', vah: 'wah',
+  kb: 'kab', bs: 'bas', sb: 'sab', tk: 'tak', skta: 'sakta', skti: 'sakti', skte: 'sakte',
+  acha: 'accha', achha: 'accha', achchha: 'accha', achaa: 'accha', acchaa: 'accha', achi: 'acchi', achhi: 'acchi', ache: 'acche', achhe: 'acche',
+  thik: 'theek', thk: 'theek', thek: 'theek', tik: 'theek',
+  bahot: 'bahut', bohot: 'bahut', bohat: 'bahut', bht: 'bahut', bhot: 'bahut', bhut: 'bahut', bahaut: 'bahut',
+  yar: 'yaar', yrr: 'yaar', yr: 'yaar', yaara: 'yaar',
+  bhaii: 'bhai', bhia: 'bhai', bhayi: 'bhai', bhaiya: 'bhaiya', bhaiyya: 'bhaiya',
+  abi: 'abhi', abhie: 'abhi', abhee: 'abhi',
+  kch: 'kuch', kuchh: 'kuch', kuj: 'kuch', koii: 'koi', koe: 'koi',
+  mtlb: 'matlab', mtlab: 'matlab', pgl: 'pagal', pagl: 'pagal',
+  abey: 'abe', arey: 'arre', arrey: 'arre', are: 'arre', arree: 'arre',
+  pta: 'pata', ptaa: 'pata',
+  zada: 'zyada', jyada: 'zyada', jada: 'zyada', zyda: 'zyada',
+  thoda: 'thoda', thda: 'thoda', thodaa: 'thoda',
+  pehle: 'pehle', phle: 'pehle', pahle: 'pehle',
+  fir: 'phir', phr: 'phir',
+  lkin: 'lekin', lekn: 'lekin',
+  jldi: 'jaldi',
+  // English abbreviations (stay English)
+  plz: 'please', pls: 'please', plss: 'please', thx: 'thanks', ty: 'thank you', sry: 'sorry',
+};

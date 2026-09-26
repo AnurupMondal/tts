@@ -1,0 +1,87 @@
+name: Deploy
+
+# `main` is the deployment branch: every push to it ships to the GCP VM.
+# GCP access uses Workload Identity Federation, which only trusts main of this repo.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCP_ARTIFACT_REPO }}/hinglish-tts
+  VM: ${{ vars.GCP_VM }}
+  ZONE: ${{ vars.GCP_ZONE }}
+
+jobs:
+  ci:
+    # Skipped until GCP is configured (repository variables set by deploy/gcp-setup.sh output).
+    if: vars.GCP_PROJECT_ID != ''
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Build, push and deploy
+    needs: ci
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Log in to Artifact Registry
+        run: gcloud auth configure-docker "${{ vars.GCP_REGION }}-docker.pkg.dev" --quiet
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build and push image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Point the VM at the new image
+        run: |
+          gcloud compute instances add-metadata "$VM" --zone "$ZONE" \
+            --metadata "image=$IMAGE:$GITHUB_SHA,deploy-id=$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+            --metadata-from-file startup-script=deploy/startup.sh
+
+      - name: Restart the VM (runs the startup script with the new image)
+        run: gcloud compute instances reset "$VM" --zone "$ZONE"
+
+      - name: Wait for the bot to log in
+        run: |
+          marker="deploy=$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          for _ in $(seq 1 40); do
+            out="$(gcloud compute instances get-serial-port-output "$VM" --zone "$ZONE" 2>/dev/null || true)"
+            if grep -q "hinglish-tts: READY $marker" <<<"$out"; then
+              echo "Bot is online: $IMAGE:$GITHUB_SHA"
+              exit 0
+            fi
+            if grep -q "hinglish-tts: FAILED $marker" <<<"$out"; then
+              echo "Bot failed to start. Startup log:"
+              grep 'hinglish-tts:' <<<"$out" | tail -40
+              exit 1
+            fi
+            sleep 15
+          done
+          echo "Timed out after 10 minutes. Recent startup log:"
+          grep 'hinglish-tts:' <<<"$out" | tail -40 || true
+          exit 1
