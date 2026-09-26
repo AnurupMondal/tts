@@ -85,6 +85,8 @@ export function normalize(tokens: Token[]): void {
     if (t.kind === 'word' && t.lang !== 'hi') {
       const expansion = ENGLISH_EXPANSIONS[w];
       if (expansion) t.norm = expansion;
+      // Speak stretched English words plainly ("hiii" → "hi", "nooo" → "no") so TTS doesn't mangle them.
+      else if (t.lang === 'en' && w !== t.raw.toLowerCase()) t.norm = w;
       return;
     }
     if (t.lang !== 'hi') return;

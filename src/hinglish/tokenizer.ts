@@ -19,6 +19,20 @@ export function squashRepeats(word: string): string {
   return word.replace(/(\p{L})\1{2,}/gu, '$1');
 }
 
+/** Greetings stretched by a single letter, which squashRepeats leaves alone: "hii", "heyy", "helloo", "byee". */
+const STRETCHED_GREETINGS: [RegExp, string][] = [
+  [/^h+i+$/, 'hi'],
+  [/^h+e+y+$/, 'hey'],
+  [/^h+e+l+o+$/, 'hello'],
+  [/^b+y+e+$/, 'bye'],
+];
+
+/** Lookup form of a word: lower-cased, repeats squashed, stretched greetings restored. */
+function lookupForm(raw: string): string {
+  const lower = squashRepeats(raw.toLowerCase());
+  return STRETCHED_GREETINGS.find(([re]) => re.test(lower))?.[1] ?? lower;
+}
+
 export function tokenize(text: string): Token[] {
   const tokens: Token[] = [];
   let lastEnd = 0;
@@ -33,7 +47,7 @@ export function tokenize(text: string): Token[] {
       tokens.push({
         kind,
         raw,
-        lower: kind === 'word' ? squashRepeats(raw.toLowerCase()) : raw.toLowerCase(),
+        lower: kind === 'word' ? lookupForm(raw) : raw.toLowerCase(),
         spaceBefore: space,
         sentenceStart: sentenceStart && kind !== 'punct',
         lang: kind === 'word' ? 'en' : 'neutral',

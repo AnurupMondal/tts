@@ -67,3 +67,22 @@ describe('degradation', () => {
     expect(result.skipped).toBe('empty');
   });
 });
+
+describe('stretched greetings', () => {
+  it.each([
+    ['hii', 'hi'],
+    ['Hiiii', 'hi'],
+    ['heyy', 'hey'],
+    ['helloo', 'hello'],
+    ['byee', 'bye'],
+    ['nooo', 'no'],
+  ])('%s is spoken as the plain English word', async (input, expected) => {
+    const result = await convert(input);
+    expect(result.text).toBe(expected);
+    expect(result.lang).toBe('en');
+  });
+
+  it('keeps a greeting in English inside a Hinglish message', async () => {
+    expect((await convert('hii bhai')).text).toBe('hi भाई');
+  });
+});

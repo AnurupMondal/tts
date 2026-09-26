@@ -57,6 +57,8 @@ function initialLabel(t: Token): Label {
   if (DEVANAGARI.test(t.raw)) return 'hi';
   const w = t.lower;
   if (/\d/.test(w) || !LATIN_WORD.test(w)) return 'keep'; // gta5, 4070ti, other scripts
+  // A stretched "hi" ("hii", "Hiii") is always the greeting, never the emphatic ही.
+  if (w === 'hi' && t.raw.length > 2) return 'en';
   const hi = isHindiWord(w);
   const en = isEnglishWord(w);
   // Acronyms (GG, OP, RTX) stay English unless they are just shouted Hindi ("BHAI").
