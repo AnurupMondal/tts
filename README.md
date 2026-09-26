@@ -131,14 +131,14 @@ See [.env.example](.env.example) for all of them. The main ones:
 | `TTS_PROVIDER` | `google` | `google` or `sarvam` |
 | `GOOGLE_APPLICATION_CREDENTIALS` | — | Path to the service-account JSON |
 | `GOOGLE_VOICE_HI` / `GOOGLE_VOICE_EN` | `hi-IN-Chirp3-HD-Charon` / `en-IN-Chirp3-HD-Charon` | Default voices |
-| `GOOGLE_SPEAKING_RATE` | `1.05` | 0.25–2.0 |
+| `GOOGLE_SPEAKING_RATE` | `0.75` | 0.25–2.0 |
 | `SARVAM_API_KEY` | — | Sarvam key |
-| `SARVAM_SPEAKER` / `SARVAM_PACE` | `shubh` / `1.05` | Bulbul v3 speaker and pace (0.5–2.0) |
+| `SARVAM_SPEAKER` / `SARVAM_PACE` | `shubh` / `0.75` | Bulbul v3 speaker and pace (0.5–2.0) |
 | `DEFAULT_MODE` | `auto` | Default language mode for new servers |
 | `MAX_QUEUE_SIZE` | `20` | Messages waiting per server; extra messages are dropped |
 | `MAX_MESSAGE_LENGTH` | `300` | Longer messages are not read |
-| `USER_COOLDOWN_MS` | `1000` | Minimum gap between one user's spoken messages |
-| `CHANNEL_COOLDOWN_MS` | `300` | Minimum gap per channel |
+| `USER_COOLDOWN_MS` | `0` | Minimum gap between one user's spoken messages (messages inside the gap are dropped, not delayed) |
+| `CHANNEL_COOLDOWN_MS` | `0` | Minimum gap per channel (same: dropped) |
 | `DUPLICATE_WINDOW_MS` | `15000` | Same user and same text within this window is ignored |
 | `GUILD_RATE_PER_MIN` | `40` | Per-server token bucket |
 | `TRANSLIT_TIMEOUT_MS` | `2000` | Transliteration request timeout |
@@ -217,7 +217,8 @@ docker compose logs -f
 | `/tts on` / `/tts off` | Read, or stop reading, messages from the current channel |
 | `/tts mode <auto\|hinglish\|hindi\|english>` | **auto** (default): Hinglish is converted and plain English is left alone. **hinglish**: always convert Hindi words. **hindi**: convert everything except names and gaming terms. **english**: never convert. |
 | `/tts voice <voice>` | Pick a voice (autocomplete lists the provider's voices; `default` resets) |
-| `/tts status` | Show on/off state, voice channel, provider, voice, mode and queue length |
+| `/tts names <true\|false>` | Say who wrote a message ("Rahul says, ...") when the speaker changes or after 30 s of quiet. On by default. |
+| `/tts status` | Show on/off state, voice channel, provider, voice, mode, names and queue length |
 | `/tts preview <text>` | Show privately how a message would be converted, without speaking it |
 | `/tts skip` / `clear` / `pause` / `resume` | Queue controls. New messages never interrupt the one being spoken. |
 | `/tts ignore user <@user>` / `/tts ignore channel <#channel>` | Toggle ignoring a user or channel |
@@ -228,7 +229,7 @@ docker compose logs -f
 - URLs, code blocks and spoilers
 - attachments with no text
 - messages over 300 characters
-- repeats, and messages from users on cooldown
+- the same message repeated by the same user within 15 s
 
 To limit who can change settings, use *Server Settings → Integrations → (bot) → Command permissions*.
 

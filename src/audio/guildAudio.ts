@@ -35,6 +35,9 @@ export interface JoinTarget {
 /** How many queued messages have TTS generated ahead of playback (includes the one about to play). */
 const PREFETCH = 2;
 
+/** After this much quiet, the same person is introduced by name again. */
+const NAME_REPEAT_MS = 30_000;
+
 /**
  * One voice connection + player + FIFO speech queue per guild.
  * Speech is never interrupted by new messages; only /tts skip stops the current clip.
@@ -47,6 +50,8 @@ export class GuildAudio {
   private paused = false;
   /** Bumped by clear()/destroy() so in-flight generations for dropped items are ignored. */
   private generation = 0;
+  /** Author of the last queued message, so back-to-back messages from one person are introduced once. */
+  private lastAuthor?: { userId: string; at: number };
 
   constructor(
     readonly guildId: string,
@@ -126,9 +131,16 @@ export class GuildAudio {
   enqueue(job: AudioJob, meta: QueueItem['meta']): boolean {
     if (this.queue.length >= this.maxQueueSize) return false;
     this.queue.push({ job, meta });
+    this.lastAuthor = { userId: meta.userId, at: Date.now() };
     this.prefetch();
     void this.playNext();
     return true;
+  }
+
+  /** True if this user's next message should be introduced by name: someone else spoke last, or a while ago. */
+  isNewSpeaker(userId: string, now = Date.now()): boolean {
+    const last = this.lastAuthor;
+    return !last || last.userId !== userId || now - last.at > NAME_REPEAT_MS;
   }
 
   skip(): boolean {

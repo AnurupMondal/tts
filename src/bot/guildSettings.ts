@@ -12,6 +12,8 @@ export interface GuildSettings {
   voice?: { provider: string; id: string };
   ignoredUsers: string[];
   ignoredChannels: string[];
+  /** Say who wrote a message ("Rahul says, ...") when the speaker changes. Unset means on. */
+  announceNames?: boolean;
 }
 
 export class GuildSettingsStore {

@@ -11,10 +11,28 @@ export interface SpeakJobOptions {
   text: string;
   mode: LanguageMode;
   voice?: string;
+  /** Author name to say before the message ("Rahul says, ..."); omitted for back-to-back messages. */
+  speaker?: string;
   resolver?: MentionResolver;
   tts: TTSProvider;
   transliterator: Transliterator;
   log: { guild: string; user: string };
+}
+
+/**
+ * A display name as it should be spoken: fancy Unicode letters folded ("𝓡𝓪𝓱𝓾𝓵" → "Rahul"),
+ * "riya_09" → "riya 09", emoji and symbols dropped. Returns undefined if nothing speakable is left.
+ */
+export function speakableName(name: string): string | undefined {
+  const cleaned = name
+    .normalize('NFKC')
+    .replace(/[_.]+/g, ' ')
+    .replace(/[^\p{L}\p{M}\p{N}\s'-]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 32)
+    .trim();
+  return /[\p{L}\p{N}]/u.test(cleaned) ? cleaned : undefined;
 }
 
 /**
@@ -37,7 +55,8 @@ export function createSpeakJob(options: SpeakJobOptions): AudioJob {
     const processedAt = performance.now();
 
     // A guild-selected voice applies to Hindi/mixed; providers map English-only text to a matching voice.
-    const audio = await options.tts.synthesize(processed.text, { lang: processed.lang, voice: options.voice });
+    const speech = options.speaker ? `${options.speaker} says, ${processed.text}` : processed.text;
+    const audio = await options.tts.synthesize(speech, { lang: processed.lang, voice: options.voice });
     const ogg = await toOggOpus(audio);
 
     logger.info(

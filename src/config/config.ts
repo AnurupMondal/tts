@@ -22,18 +22,18 @@ const schema = z.object({
   GOOGLE_APPLICATION_CREDENTIALS: optionalString,
   GOOGLE_VOICE_HI: z.string().default('hi-IN-Chirp3-HD-Charon'),
   GOOGLE_VOICE_EN: z.string().default('en-IN-Chirp3-HD-Charon'),
-  GOOGLE_SPEAKING_RATE: z.coerce.number().min(0.25).max(4).default(1.05),
+  GOOGLE_SPEAKING_RATE: z.coerce.number().min(0.25).max(4).default(0.75),
 
   SARVAM_API_KEY: optionalString,
   SARVAM_MODEL: z.string().default('bulbul:v3'),
   SARVAM_SPEAKER: z.string().default('shubh'),
-  SARVAM_PACE: z.coerce.number().min(0.3).max(3).default(1.05),
+  SARVAM_PACE: z.coerce.number().min(0.3).max(3).default(0.75),
 
   DEFAULT_MODE: z.enum(LANGUAGE_MODES).default('auto'),
   MAX_QUEUE_SIZE: z.coerce.number().int().positive().default(20),
   MAX_MESSAGE_LENGTH: z.coerce.number().int().positive().default(300),
-  USER_COOLDOWN_MS: z.coerce.number().int().nonnegative().default(1000),
-  CHANNEL_COOLDOWN_MS: z.coerce.number().int().nonnegative().default(300),
+  USER_COOLDOWN_MS: z.coerce.number().int().nonnegative().default(0),
+  CHANNEL_COOLDOWN_MS: z.coerce.number().int().nonnegative().default(0),
   DUPLICATE_WINDOW_MS: z.coerce.number().int().nonnegative().default(15000),
   GUILD_RATE_PER_MIN: z.coerce.number().int().positive().default(40),
 

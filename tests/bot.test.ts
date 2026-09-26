@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GuildSettingsStore } from '../src/bot/guildSettings.js';
 import { SpamGuard } from '../src/bot/spamGuard.js';
+import { speakableName } from '../src/bot/speak.js';
 import { CachedTTSProvider } from '../src/tts/cache.js';
 import type { TTSProvider } from '../src/tts/provider.js';
 import { chunkText, SarvamTTSProvider } from '../src/tts/sarvam.js';
@@ -126,5 +127,17 @@ describe('SarvamTTSProvider', () => {
     const fetchImpl = vi.fn(async () => new Response('{"error":"bad key"}', { status: 403 }));
     const provider = new SarvamTTSProvider({ apiKey: 'k', model: 'bulbul:v3', speaker: 'shubh', pace: 1, fetchImpl: fetchImpl as unknown as typeof fetch });
     await expect(provider.synthesize('x', { lang: 'hi' })).rejects.toThrow(/403/);
+  });
+});
+
+describe('speakableName', () => {
+  it('folds fancy letters and drops symbols', () => {
+    expect(speakableName('𝓡𝓪𝓱𝓾𝓵')).toBe('Rahul');
+    expect(speakableName('riya_09')).toBe('riya 09');
+    expect(speakableName('『Aman』 ✨')).toBe('Aman');
+  });
+
+  it('returns undefined when nothing speakable is left', () => {
+    expect(speakableName('✨✨')).toBeUndefined();
   });
 });

@@ -34,6 +34,12 @@ const data = new SlashCommandBuilder()
       .setDescription('Choose the voice')
       .addStringOption((o) => o.setName('voice').setDescription('Voice (type to search, or "default")').setRequired(true).setAutocomplete(true)),
   )
+  .addSubcommand((s) =>
+    s
+      .setName('names')
+      .setDescription('Say who wrote each message ("Rahul says, ...")')
+      .addBooleanOption((o) => o.setName('enabled').setDescription('Announce names').setRequired(true)),
+  )
   .addSubcommand((s) => s.setName('status').setDescription('Show TTS status for this server'))
   .addSubcommand((s) =>
     s
@@ -149,6 +155,14 @@ export const tts: Command = {
         await interaction.reply(`Voice set to **${id}**.`);
         return;
       }
+      case 'names': {
+        const enabled = interaction.options.getBoolean('enabled', true);
+        ctx.settings.update(guildId, (s) => (s.announceNames = enabled));
+        await interaction.reply(
+          enabled ? "Names are **on**: I'll say who wrote a message when the speaker changes." : 'Names are **off**.',
+        );
+        return;
+      }
       case 'status': {
         const s = ctx.settings.get(guildId);
         const lines = [
@@ -158,6 +172,7 @@ export const tts: Command = {
           `**Provider:** ${ctx.tts.name}`,
           `**Voice:** ${ctx.settings.voiceFor(guildId, ctx.tts.name) ?? `${ctx.tts.defaultVoice('hi')} (default)`}`,
           `**Mode:** ${s.mode}`,
+          `**Names:** ${s.announceNames === false ? 'off' : 'on'}`,
           `**Queue:** ${audio?.length ?? 0}/${ctx.config.MAX_QUEUE_SIZE}${audio?.isPaused ? ' (paused)' : ''}`,
           `**Transliteration:** ${ctx.transliterator.name}`,
         ];

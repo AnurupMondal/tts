@@ -2,7 +2,7 @@ import { MessageType, type Message } from 'discord.js';
 import type { MentionResolver } from '../hinglish/preprocess.js';
 import { logger } from '../logger.js';
 import type { BotContext } from './context.js';
-import { createSpeakJob } from './speak.js';
+import { createSpeakJob, speakableName } from './speak.js';
 
 /** Text commands for other bots ("!play", ".help", "?rank", "$bal"). */
 const OTHER_BOT_COMMAND = /^[!/.?$%;>~=+-][\p{L}]/u;
@@ -46,10 +46,16 @@ export async function handleMessage(message: Message, ctx: BotContext): Promise<
     return;
   }
 
+  const announce = settings.announceNames !== false && audio.isNewSpeaker(message.author.id);
+  const speaker = announce
+    ? (speakableName(message.member?.displayName ?? message.author.displayName) ?? speakableName(message.author.username))
+    : undefined;
+
   const job = createSpeakJob({
     text: content,
     mode: settings.mode,
     voice: ctx.settings.voiceFor(guildId, ctx.tts.name),
+    speaker,
     resolver: mentionResolver(message),
     tts: ctx.tts,
     transliterator: ctx.transliterator,
